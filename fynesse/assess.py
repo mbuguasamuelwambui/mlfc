@@ -111,3 +111,72 @@ def view(data: Union[pd.DataFrame, Any]) -> None:
 def labelled(data: Union[pd.DataFrame, Any]) -> Union[pd.DataFrame, Any]:
     """Provide a labelled set of data ready for supervised learning."""
     raise NotImplementedError
+# Write your answer to Exercise 1 here
+import numpy as np
+
+poi_types= [
+    ("building", None),
+    ("amenity", None),
+    ("amenity", "school"),
+    ("amenity", "hospital"),
+    ("amenity", "restaurant"),
+    ("amenity", "cafe"),
+    ("shop", None),
+    ("tourism", None),
+    ("tourism", "hotel"),
+    ("tourism", "museum"),
+    ("leisure", None),
+    ("leisure", "park"),
+    ("historic", None),
+    ("amenity", "place_of_worship"),
+]
+# Define function to query OSM and build feature vector
+def get_feature_vector(latitude, longitude, poi_types, dist=2000):
+    """
+    Given coordinates, query OpenStreetMap and return feature counts.
+
+    Parameters
+    ----------
+    latitude : float
+        Center latitude
+    longitude : float
+        Center longitude
+    poi_types : list of tuples
+        (key, value) pairs of POIs to count
+    dist : int
+        Search radius in meters (default 2000m)
+
+    Returns
+    -------
+    pd.DataFrame
+        Feature vector with POI counts
+    """
+    # Build tags dictionary
+    tags = {}
+    for key, value in poi_types:
+        if key not in tags:
+            tags[key] = []
+        if value is None:
+            tags[key] = True # If value is None, we want any feature with this key
+        else:
+            if isinstance(tags[key], list): # Append only if it's a list
+                 tags[key].append(value)
+            else: # If it's already True, we don't need to do anything
+                 pass
+
+    # Query OSM around the city
+    pois_df = ox.features_from_point((latitude, longitude),
+                                       tags=tags,
+                                       dist=dist)
+
+    poi_counts = {}
+    for key, value in poi_types:
+        if key in pois_df.columns:
+            if value:  # specific type
+                poi_counts[f"{key}:{value}"] = (pois_df[key] == value).sum()
+            else:  # any value under that key
+                poi_counts[key] = pois_df[key].notnull().sum()
+        else:
+            poi_counts[f"{key}:{value}" if value else key] = 0
+
+    return pd.DataFrame(list(poi_counts.items()), columns=["POI Type", "Count"])
