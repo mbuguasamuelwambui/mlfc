@@ -165,4 +165,16 @@ def plot_city_map(place_name, latitude, longitude,box_size=2, pois_tags=None):
   ax.set_xlim(west, east)
   ax.set_ylim(south, north)
   ax.set_title(place_name, fontsize=14)
+   # Camera scatter
+    if coords_df is not None:
+        ax.scatter(
+            coords_df["Longitude"],
+            coords_df["Latitude"],
+            c="red", s=10, marker="o", label="Cameras"
+        )
+    else:
+        ax.scatter(
+            longitude, latitude,
+            c="red", s=30, marker="x", label="Point"
+        )
   plt.show()
