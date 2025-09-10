@@ -166,18 +166,19 @@ def plot_city_map(place_name, latitude, longitude,box_size=2, pois_tags=None):
   ax.set_ylim(south, north)
   ax.set_title(place_name, fontsize=14)
   plt.show()
-def plot_city_map_2(place_name, latitude=None, longitude=None, coords_df=None, box_size_km=2, poi_tags=None):
+
+def plot_city_map(place_name, latitude=None, longitude=None, coords_df=None, box_size_km=2, poi_tags=None):
 
     if coords_df is not None: 
-        lat_min, lat_max = coords_df["Latitude"].min(), coords_df["Latitude"].max()
-        lon_min, lon_max = coords_df["Longitude"].min(), coords_df["Longitude"].max()
+        lat_min, lat_max = coords_df["latitude"].min(), coords_df["latitude"].max()
+        lon_min, lon_max = coords_df["longitude"].min(), coords_df["longitude"].max()
 
         lat_margin = box_size_km / 111
         lon_margin = box_size_km / 111
-        north = lat_max + lat_margin/2
-        south = lat_min - lat_margin/2
-        west = lon_min - lon_margin/2
-        east = lon_max + lon_margin/2
+        north = lat_max + lat_margin/10
+        south = lat_min - lat_margin/10
+        west = lon_min - lon_margin/10
+        east = lon_max + lon_margin/10
 
     elif latitude is not None and longitude is not None: 
         box_width = box_size_km / 111
@@ -188,7 +189,7 @@ def plot_city_map_2(place_name, latitude=None, longitude=None, coords_df=None, b
         east = longitude + box_width/2
 
     else:
-        raise ValueError("No Cordinates available")
+        raise ValueError("No coordinates available")
 
     bbox = (west, south, east, north)
 
@@ -208,8 +209,8 @@ def plot_city_map_2(place_name, latitude=None, longitude=None, coords_df=None, b
 
         if coords_df is not None:
             ax.scatter(
-                coords_df["Longitude"],
-                coords_df["Latitude"],
+                coords_df["longitude"],
+                coords_df["latitude"],
                 c="red", s=10, marker="o", label="Cameras"
             )
         else:
@@ -226,28 +227,3 @@ def plot_city_map_2(place_name, latitude=None, longitude=None, coords_df=None, b
 
     except Exception as e:
         print(f"[Warning] Could not plot map: {e}")
-
-def find_cordinates(df):
-    candidates = {
-        "lat": ["lat", "latitude", "y_coord"],
-        "lon": ["lon", "longitude", "x_coord"]
-        }
-
-    cols = [c.lower() for c in df.columns]
-    for name in candidates["lat"]:
-        if name in cols:
-            lat = df.columns[cols.index(name)]
-            break
-    for name in candidates["lon"]:
-        if name in cols:
-            lon = df.columns[cols.index(name)]
-            break
-    return lat,lon
-
-lat,lon = find_cordinates(porini_df)
-if lat is None or lon is None:
-    raise RuntimeError(f"Could not find lat/lon columns")
-
-unique_coords_df = porini_df[[lat, lon]].drop_duplicates().reset_index(drop=True)
-# Rename columns to lowercase to match fynesse function expectation
-unique_coords_df = unique_coords_df.rename(columns={lat: 'latitude', lon: 'longitude'})
