@@ -226,3 +226,28 @@ def plot_city_map_2(place_name, latitude=None, longitude=None, coords_df=None, b
 
     except Exception as e:
         print(f"[Warning] Could not plot map: {e}")
+
+def find_cordinates(df):
+    candidates = {
+        "lat": ["lat", "latitude", "y_coord"],
+        "lon": ["lon", "longitude", "x_coord"]
+        }
+
+    cols = [c.lower() for c in df.columns]
+    for name in candidates["lat"]:
+        if name in cols:
+            lat = df.columns[cols.index(name)]
+            break
+    for name in candidates["lon"]:
+        if name in cols:
+            lon = df.columns[cols.index(name)]
+            break
+    return lat,lon
+
+lat,lon = find_cordinates(porini_df)
+if lat is None or lon is None:
+    raise RuntimeError(f"Could not find lat/lon columns")
+
+unique_coords_df = porini_df[[lat, lon]].drop_duplicates().reset_index(drop=True)
+# Rename columns to lowercase to match fynesse function expectation
+unique_coords_df = unique_coords_df.rename(columns={lat: 'latitude', lon: 'longitude'})
